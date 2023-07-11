@@ -1,12 +1,7 @@
 <template>
   <div class="FC JC AC home height100">
-    <div
-      v-if="!loading"
-      class="C87 abs FC JC AC"
-      style="margin-bottom: 40px; top: 30px"
-    >
-      <h1 style="margin-bottom: 20px">png, jpg, jpeg, webp를 webp로!</h1>
-      <h1>폴더 또는 파일에다가 드래그 드랍!</h1>
+    <div v-if="!loading" class="C87 abs FC JC AC" style="top: 80px">
+      <h2>폴더 내부에 있는 파일들의 이름이 폴더 구조가 포함된 이름으로!</h2>
     </div>
     <div v-if="loading" class="FC JC AC img-box">
       <img :src="require(`@/assets/loading.png`)" />
@@ -25,38 +20,8 @@
     <div v-else class="FC AC JC">
       <div class="FR AC JC">
         <div class="FC AC JC drag pointer" id="drag-folder">
+          <h3 class="C87">폴더 드래그 드랍!</h3>
           <h2 class="C87">Folder</h2>
-        </div>
-        <div class="FC AC JC drag pointer" id="drag-file">
-          <h2 class="C87">File</h2>
-        </div>
-      </div>
-      <div class="FC width100">
-        <div class="FR AC width100" style="margin-left: 20px">
-          <h3 style="margin-right: 20px" class="C87">
-            Width 조절 : {{ width }}
-          </h3>
-          <input
-            type="range"
-            min="10"
-            max="1000"
-            step="5"
-            class="flex1"
-            v-model="width"
-          />
-        </div>
-        <div class="FR AC width100" style="margin-left: 20px">
-          <h3 style="margin-right: 20px" class="C87">
-            Height 조절 : {{ height }}
-          </h3>
-          <input
-            type="range"
-            min="10"
-            max="1000"
-            step="5"
-            class="flex1"
-            v-model="height"
-          />
         </div>
       </div>
     </div>
@@ -66,12 +31,10 @@
 <script lang="ts">
 import { Vue } from "vue-class-component";
 const { ipcRenderer } = window.require("electron");
-export default class ImageDesolder extends Vue {
+export default class FolderDesolder extends Vue {
   loading = false;
   showResult = false;
   result = true;
-  width = 60;
-  height = 60;
 
   dragFolderElement: any = null;
   dragFileElement: any = null;
@@ -94,8 +57,6 @@ export default class ImageDesolder extends Vue {
       const rootFilePath = e.dataTransfer.files[0]?.path;
       this.result = await ipcRenderer.invoke("convertFolderImage", {
         path: rootFilePath,
-        width: this.width,
-        height: this.height,
       });
       this.showResult = true;
       this.loading = false;
@@ -103,51 +64,14 @@ export default class ImageDesolder extends Vue {
         this.showResult = false;
         setTimeout(() => {
           this.folderHandler();
-          this.fileHandler();
         }, 0);
       }, 5000);
       return;
     };
   }
 
-  fileHandler() {
-    this.dragFileElement = null;
-    this.dragFileElement = document.getElementById("drag-file");
-    this.dragFileElement.ondragover = () => {
-      return false;
-    };
-    this.dragFileElement.ondragleave = () => {
-      return false;
-    };
-    this.dragFileElement.ondragend = () => {
-      return false;
-    };
-    this.dragFileElement.ondrop = async (e: any) => {
-      e.preventDefault();
-      this.loading = true;
-      const rootFilePath = e.dataTransfer.files[0]?.path;
-      this.result = await ipcRenderer.invoke("convertImage", {
-        path: rootFilePath,
-        width: this.width,
-        height: this.height,
-      });
-      this.showResult = true;
-      this.loading = false;
-      setTimeout(() => {
-        this.showResult = false;
-        setTimeout(() => {
-          this.folderHandler();
-          this.fileHandler();
-        }, 0);
-      }, 5000);
-
-      return false;
-    };
-  }
-
   mounted() {
     this.folderHandler();
-    this.fileHandler();
   }
 }
 </script>

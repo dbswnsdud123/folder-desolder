@@ -4,7 +4,7 @@ import { app, protocol, BrowserWindow, ipcMain } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 import fs from "fs";
-import sharp from "sharp";
+import path from "path";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 console.log(__dirname, "__dirname");
@@ -39,81 +39,60 @@ async function createWindow() {
     }
     return fileList;
   }
-  function checkImage(path: string) {
-    return path.includes(".png") ||
-      path.includes(".jpg") ||
-      path.includes(".jpeg") ||
-      path.includes(".webp")
-      ? true
-      : false;
-  }
-  function deleteImageProperty(path: string) {
-    let deletedImagePropertyPath = path;
-    deletedImagePropertyPath = deletedImagePropertyPath.replace(".png", "");
-    deletedImagePropertyPath = deletedImagePropertyPath.replace(".jpg", "");
-    deletedImagePropertyPath = deletedImagePropertyPath.replace(".jpeg", "");
-    deletedImagePropertyPath = deletedImagePropertyPath.replace(".webp", "");
-    return deletedImagePropertyPath;
-  }
 
   ipcMain.handle("convertFolderImage", async (event, arg) => {
     let rootPath: string = arg.path;
-    const width = Number(arg.width);
-    const height = Number(arg.height);
     rootPath = rootPath.replaceAll("\\", "/");
     if (!fs.lstatSync(rootPath).isDirectory()) return false;
-
     const dirFileList = await searchDirectory(rootPath);
+    const parentFolderPath = path.dirname(rootPath);
+    const folderName = `${path.basename(rootPath)}_converted`;
+    const convertedFolderPath = path.join(parentFolderPath, folderName);
+
+    const copying = async (convertOriginPath, convertResultPath) => {
+      return new Promise((resolve, reject) => {
+        fs.copyFile(convertOriginPath, convertResultPath, (err) => {
+          if (err) reject(err);
+          else resolve(true);
+        });
+      });
+    };
+
+    const makeFolder = async (path) => {
+      return new Promise((resolve, reject) => {
+        fs.mkdir(path, { recursive: true }, (err) => {
+          if (err) reject(err);
+          else resolve(true);
+        });
+      });
+    };
+
+    await makeFolder(convertedFolderPath);
+
     const promiseList: Array<any> = [];
-
     for (const filePath of dirFileList) {
-      let webpFilePath = filePath;
-      if (!checkImage(filePath)) continue;
-      webpFilePath = deleteImageProperty(webpFilePath);
-      const converting = sharp(filePath)
-        .resize(width, height)
-        .toFile(
-          `${
-            filePath.includes(".webp")
-              ? `${webpFilePath}_converted`
-              : webpFilePath
-          }.webp`
-        );
-      promiseList.push(converting);
-      const promiseResultList = await Promise.allSettled(promiseList);
-      const erroredPromise = promiseResultList.filter(
-        (promiseResult: any) => promiseResult.status == "rejected"
+      if (filePath.includes("DS_Store")) continue;
+      const originPath = filePath.replaceAll(rootPath, convertedFolderPath);
+      const nameWithoutConvertedFolderName = originPath.replaceAll(
+        `${convertedFolderPath}/`,
+        ""
       );
+      const convertedName = `${path.basename(
+        rootPath
+      )}_${nameWithoutConvertedFolderName.replaceAll("/", "_")}`;
+      const resultPath = path.join(convertedFolderPath, convertedName);
 
-      if (erroredPromise.length != 0) return false;
+      promiseList.push(copying(filePath, resultPath));
     }
 
+    const promiseResultList = await Promise.allSettled(promiseList);
+    const erroredPromise = promiseResultList.filter(
+      (promiseResult: any) => promiseResult.status == "rejected"
+    );
+
+    if (erroredPromise.length != 0) return false;
+
     return true;
-  });
-
-  ipcMain.handle("convertImage", async (event, arg) => {
-    let rootPath: string = arg.path;
-    const width = Number(arg.width);
-    const height = Number(arg.height);
-
-    rootPath = rootPath.replaceAll("\\", "/");
-    let webpFilePath = rootPath;
-    if (!checkImage(rootPath)) return false;
-    webpFilePath = webpFilePath = deleteImageProperty(webpFilePath);
-    const convertResult = await sharp(rootPath)
-      .resize(width, height)
-      .toFile(
-        `${
-          rootPath.includes(".webp")
-            ? `${webpFilePath}_converted`
-            : webpFilePath
-        }.webp`
-      )
-      .catch((err) => {
-        console.log(err);
-      });
-    if (convertResult) return true;
-    else return false;
   });
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
@@ -121,7 +100,7 @@ async function createWindow() {
     if (!process.env.IS_TEST) win.webContents.openDevTools();
   } else {
     createProtocol("app");
-    await win.loadURL(`app://./index.html/#Image-Desolder`);
+    await win.loadURL(`app://./index.html/#Folder-Desolder`);
   }
 }
 app.on("window-all-closed", () => {

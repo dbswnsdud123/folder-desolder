@@ -1,13 +1,13 @@
 <template>
-  <ImageDesolder></ImageDesolder>
+  <FolderDesolder></FolderDesolder>
 </template>
 
 <script>
-import ImageDesolder from "@/views/ImageDesolder.vue";
+import FolderDesolder from "@/views/FolderDesolder.vue";
 export default {
   name: "App",
   components: {
-    ImageDesolder,
+    FolderDesolder,
   },
 };
 </script>

@@ -20,9 +20,12 @@ module.exports = {
       nodeIntegration: true,
       outputDir: "dist_electron",
       builderOptions: {
-        productName: "Image Desolder",
-        artifactName: "Image Desolder Setup ${version}.${ext}",
+        productName: "Folder Desolder",
+        artifactName: "Folder Desolder Setup ${version}.${ext}",
         win: {
+          icon: "public/logo.png",
+        },
+        mac: {
           icon: "public/logo.png",
         },
       },

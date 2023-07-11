@@ -1,16 +1,16 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
-import ImageDesolder from "../views/ImageDesolder.vue";
+import FolderDesolder from "../views/FolderDesolder.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
     name: "Home",
-    component: ImageDesolder,
+    component: FolderDesolder,
   },
   {
-    path: "/Image-Desolder",
-    name: "Image Desolder",
-    component: ImageDesolder,
+    path: "/Folder-Desolder",
+    name: "Folder Desolder",
+    component: FolderDesolder,
   },
 ];
 

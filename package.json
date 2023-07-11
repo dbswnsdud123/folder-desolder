@@ -1,5 +1,5 @@
 {
-  "name": "Image-Desolder",
+  "name": "Folder-Desolder",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -16,7 +16,6 @@
   "dependencies": {
     "core-js": "^3.6.5",
     "electron-builder": "23.0.2",
-    "sharp": "^0.30.6",
     "vue": "^3.0.0",
     "vue-class-component": "^8.0.0-0",
     "vue-property-decorator": "^9.1.2",
